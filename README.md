@@ -14,6 +14,12 @@ This is the repository for the development of the phpBB Auto Database Backup Ext
 6. Look for `Auto Database Backup` under the Disabled Extensions list, and click its `Enable` link.
 7. Set up and configure `Auto Database Backup` by navigating in the ACP to `Maintenance` -> `Database` -> `Auto backup settings`.
 
+## Backup retention
+
+The copies setting applies to automatic backups created with the current naming
+format. Older and manual backups are kept for manual review and removal. New
+automatic backups appear in ACP Restore on phpBB 3.3 and 4.0.
+
 ## Uninstall
 
 1. Navigate in the ACP to `Customise -> Extension Management -> Extensions`.
