@@ -18,6 +18,7 @@ use phpbb\log\log;
 use phpbb\request\request;
 use phpbb\template\template;
 use phpbb\user;
+use phpbbmodders\autodbbackup\backup_directory;
 
 class admin_controller
 {
@@ -47,6 +48,9 @@ class admin_controller
 	/** @var string Custom form action */
 	protected $u_action;
 
+	/** @var string phpBB root path */
+	protected $root_path;
+
 	/**
 	* Constructor
 	*
@@ -66,7 +70,8 @@ class admin_controller
 		log $log,
 		request $request,
 		template $template,
-		user $user)
+		user $user,
+		string $root_path)
 	{
 		$this->config = $config;
 		$this->db = $db;
@@ -75,6 +80,7 @@ class admin_controller
 		$this->request = $request;
 		$this->template = $template;
 		$this->user = $user;
+		$this->root_path = $root_path;
 	}
 
 	public function settings()
@@ -163,6 +169,7 @@ class admin_controller
 			$submitted_unit = $this->request->variable('auto_db_backup_gc_unit', 'days');
 			$auto_db_backup_copies = $this->request->variable('auto_db_backup_copies', 0);
 			$filetype = $this->request->variable('auto_db_backup_filetype', 'text');
+			$directory = htmlspecialchars_decode($this->request->variable('auto_db_backup_directory', '', true), ENT_QUOTES);
 
 			if (!check_form_key('acp_auto_db_backup'))
 			{
@@ -183,6 +190,11 @@ class admin_controller
 			if ($auto_db_backup_copies < 0)
 			{
 				$errors[] = $this->language->lang('AUTO_DB_BACKUP_COPIES_ERROR');
+			}
+
+			if ($directory !== '' && !backup_directory::is_valid($directory, $this->root_path, $this->request->server('DOCUMENT_ROOT')))
+			{
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_DIRECTORY_ERROR');
 			}
 
 			$day = $this->request->variable('auto_db_backup_day', 0);
@@ -206,6 +218,7 @@ class admin_controller
 				$this->config->set('auto_db_backup_gc', $interval);
 				$this->config->set('auto_db_backup_gc_unit', $submitted_unit);
 				$this->config->set('auto_db_backup_copies', $this->request->variable('auto_db_backup_copies', 0));
+				$this->config->set('auto_db_backup_directory', $directory);
 				$this->config->set('auto_db_backup_optimize', $this->request->variable('auto_db_backup_optimize', 0));
 				$this->config->set('auto_db_backup_last_gc', $next_backup - $interval);
 
@@ -228,6 +241,7 @@ class admin_controller
 			'AUTO_DB_BACKUP_GC'			=> $this->config['auto_db_backup_gc'] / self::INTERVAL_SECONDS[$unit],
 			'S_AUTO_DB_BACKUP_HOURS'		=> $unit === 'hours',
 			'AUTO_DB_BACKUP_COPIES'		=> $this->config['auto_db_backup_copies'],
+			'AUTO_DB_BACKUP_DIRECTORY'	=> $this->config['auto_db_backup_directory'],
 
 			'U_ACTION'					=> $this->u_action,
 		));
