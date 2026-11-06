@@ -20,6 +20,20 @@ The copies setting applies to automatic backups created with the current naming
 format. Older and manual backups are kept for manual review and removal. New
 automatic backups appear in ACP Restore on phpBB 3.3 and 4.0.
 
+## Custom backup directory
+
+Leave **Backup directory** blank to keep phpBB's default destination and ACP
+Restore integration. A custom directory must already exist and be private,
+writable by the PHP process, inaccessible to other users (for example, mode
+0700 or 0750), and outside all web document roots. Enter its
+absolute path without symbolic links or a trailing slash.
+
+Changing the setting leaves existing archives in place. Retention applies only
+to marked automatic archives at the selected destination. Custom archives are
+not listed in ACP Restore on either branch. To recover one, import it through
+the appropriate database tool. phpBB 3.3 stages the archive in its protected
+board store before the extension publishes it to the custom directory.
+
 ## Uninstall
 
 1. Navigate in the ACP to `Customise -> Extension Management -> Extensions`.

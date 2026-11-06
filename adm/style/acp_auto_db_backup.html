@@ -46,6 +46,10 @@
 			<dd><input  id="auto_db_backup_copies" type="number" max="99" min="0" name="auto_db_backup_copies" value="{{ AUTO_DB_BACKUP_COPIES }}"/></dd>
 		</dl>
 		<dl>
+			<dt><label for="auto_db_backup_directory">{{ lang('AUTO_DB_BACKUP_DIRECTORY') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_DIRECTORY_EXPLAIN') }}</span></dt>
+			<dd><input id="auto_db_backup_directory" name="auto_db_backup_directory" type="text" value="{{ AUTO_DB_BACKUP_DIRECTORY|e('html_attr') }}" /></dd>
+		</dl>
+		<dl>
 			<dt><label for="auto_db_backup_day">{{ lang('AUTO_DB_BACKUP_TIME') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_TIME_EXPLAIN') }}</span></dt>
 			<dd>
 				<label for="auto_db_backup_day">{{ lang('DAY') }}{{ lang('COLON') }}
