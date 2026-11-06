@@ -23,6 +23,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class auto_db_backup extends \phpbb\cron\task\base
 {
+	// Combined with unique_id(), this fits phpBB's 32-character backup identifier.
+	private const BACKUP_MARKER = 'picoautodbbackup';
+
 	protected $config;
 	protected $db;
 	protected $db_tools;
@@ -92,7 +95,7 @@ class auto_db_backup extends \phpbb\cron\task\base
 
 		$time = time();
 		$format = $this->config['auto_db_backup_filetype'];
-		$filename = 'backup_' . $time . '_' . unique_id();
+		$filename = 'backup_' . $time . '_' . self::BACKUP_MARKER . unique_id();
 
 		/** @var phpbb\db\extractor\extractor_interface $extractor Database extractor */
 		$extractor = $this->phpbb_container->get('dbal.extractor');
@@ -112,39 +115,113 @@ class auto_db_backup extends \phpbb\cron\task\base
 
 		$extractor->write_end();
 
-		// Delete backup
-		if ($this->config['auto_db_backup_copies'])
+		$suffixes = ['text' => '.sql', 'gzip' => '.sql.gz', 'bzip2' => '.sql.bz2'];
+		$current = $filename . $suffixes[$format];
+		$storage = null;
+		if (defined('BACKUPS_TABLE') && $this->phpbb_container->has('storage.backup'))
 		{
-			$rep = $this->root_path . 'store/';
-			$dir = opendir($rep);
-			$files = array();
-			while (($file = readdir($dir)) !== false)
+			$storage = $this->phpbb_container->get('storage.backup');
+			$this->store_backup($storage, $current);
+		}
+
+		$copies = (int) $this->config['auto_db_backup_copies'];
+		if ($copies > 0)
+		{
+			$this->prune_backups($current, $copies, $storage);
+		}
+
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP');
+	}
+
+
+	/**
+	 * Publish the extractor's temporary file through phpBB 4.0 backup storage.
+	 */
+	private function store_backup($storage, string $filename): void
+	{
+		$path = $this->phpbb_container->get('filesystem.temp')->get_dir() . '/' . $filename;
+		$stream = fopen($path, 'rb');
+		if ($stream === false)
+		{
+			throw new \phpbb\exception\runtime_exception('CANNOT_OPEN_FILE');
+		}
+
+		try
+		{
+			$storage->write($filename, $stream);
+			$this->db->sql_query('INSERT INTO ' . BACKUPS_TABLE . ' ' .
+				$this->db->sql_build_array('INSERT', ['filename' => $filename]));
+		}
+		finally
+		{
+			fclose($stream);
+			unlink($path);
+		}
+	}
+
+	/**
+	 * Retain the newest marked backups. Legacy and manual backups are unmarked.
+	 */
+	private function prune_backups(string $current, int $copies, $storage): void
+	{
+		$pattern = '#\Abackup_([0-9]{10,})_' . self::BACKUP_MARKER . '[a-z0-9]{16}\.sql(?:\.(?:gz|bz2))?\z#';
+		$files = [];
+		$store = $this->root_path . 'store/';
+		if ($storage !== null)
+		{
+			$result = $this->db->sql_query('SELECT filename FROM ' . BACKUPS_TABLE);
+			while ($row = $this->db->sql_fetchrow($result))
 			{
-				if (is_file($rep . $file) && (substr($file, -3) == '.gz' || substr($file, -4) == '.bz2' || substr($file, -4) == '.sql' ))
+				if (preg_match($pattern, $row['filename'], $matches))
 				{
-					$files[$file] = fileatime($rep . $file);
+					$files[$row['filename']] = (int) $matches[1];
 				}
 			}
-			closedir($dir);
-
-			arsort($files);
-			reset($files);
-
-			if (sizeof($files) > $this->config['auto_db_backup_copies'])
+			$this->db->sql_freeresult($result);
+		}
+		else
+		{
+			foreach (new \FilesystemIterator($store) as $entry)
 			{
-				$i = 0;
-				foreach ($files as $key => $value)
+				$file = $entry->getFilename();
+				if (!$entry->isLink() && $entry->isFile() && preg_match($pattern, $file, $matches))
 				{
-					$i++;
-					if ($i > $this->config['auto_db_backup_copies'])
-					{
-						unlink($rep . $key);
-					}
+					$files[$file] = (int) $matches[1];
 				}
 			}
 		}
 
-		$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP');
+		// Keep the new backup first if two filenames have the same timestamp.
+		if (isset($files[$current]))
+		{
+			$files = [$current => $files[$current]] + $files;
+		}
+		arsort($files);
+
+		foreach (array_slice(array_keys($files), $copies) as $file)
+		{
+			try
+			{
+				if ($storage !== null)
+				{
+					$storage->delete($file);
+					$this->db->sql_query('DELETE FROM ' . BACKUPS_TABLE . " WHERE filename = '" . $this->db->sql_escape($file) . "'");
+				}
+				else if (!@unlink($store . $file))
+				{
+					$this->log_delete_failure($file);
+				}
+			}
+			catch (\phpbb\storage\exception\storage_exception $e)
+			{
+				$this->log_delete_failure($file);
+			}
+		}
+	}
+
+	private function log_delete_failure(string $file): void
+	{
+		$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_DELETE_FAILED', false, [$file]);
 	}
 
 	/**

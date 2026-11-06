@@ -1,7 +1,7 @@
 {
     "name": "pico/autodbbackup",
     "type": "phpbb-extension",
-    "description": "An extension for phpBB 3.3 that will automatically backup your database using the phpBB 3.3 Cron.",
+    "description": "Automatically backs up your database using phpBB cron.",
     "homepage": "https://github.com/rmcgirr83/autodbbackup",
     "version": "2.1.0",
 	"time": "2024-02-23",
