@@ -20,6 +20,8 @@ use phpbb\user;
 
 class admin_controller
 {
+	private const INTERVAL_SECONDS = ['hours' => 3600, 'days' => 86400];
+
 	/** @var config */
 	protected $config;
 
@@ -83,6 +85,7 @@ class admin_controller
 		add_form_key('acp_auto_db_backup');
 
 		$errors = $filetypes = [];
+		$unit = $this->config['auto_db_backup_gc_unit'] === 'hours' ? 'hours' : 'days';
 
 		if (@extension_loaded('zlib'))
 		{
@@ -156,6 +159,7 @@ class admin_controller
 		{
 
 			$auto_db_backup_gc = $this->request->variable('auto_db_backup_gc', 0);
+			$submitted_unit = $this->request->variable('auto_db_backup_gc_unit', 'days');
 			$auto_db_backup_copies = $this->request->variable('auto_db_backup_copies', 0);
 
 			if (!check_form_key('acp_auto_db_backup'))
@@ -163,7 +167,7 @@ class admin_controller
 				$errors[] = $this->user->lang('FORM_INVALID');
 			}
 
-			if ($auto_db_backup_gc <= 0)
+			if ($auto_db_backup_gc < 1 || $auto_db_backup_gc > 99 || !isset(self::INTERVAL_SECONDS[$submitted_unit]))
 			{
 				$errors[] = $this->user->lang('AUTO_DB_BACKUP_FREQ_ERROR');
 			}
@@ -188,10 +192,11 @@ class admin_controller
 
 			if (empty($errors))
 			{
-				$interval = $auto_db_backup_gc * 86400;
+				$interval = $auto_db_backup_gc * self::INTERVAL_SECONDS[$submitted_unit];
 				$this->config->set('auto_db_backup_enable', $this->request->variable('auto_db_backup_enable', 0));
 				$this->config->set('auto_db_backup_filetype', $this->request->variable('auto_db_backup_filetype', 'text'));
 				$this->config->set('auto_db_backup_gc', $interval);
+				$this->config->set('auto_db_backup_gc_unit', $submitted_unit);
 				$this->config->set('auto_db_backup_copies', $this->request->variable('auto_db_backup_copies', 0));
 				$this->config->set('auto_db_backup_optimize', $this->request->variable('auto_db_backup_optimize', 0));
 				$this->config->set('auto_db_backup_last_gc', $next_backup - $interval);
@@ -212,7 +217,8 @@ class admin_controller
 			'S_AUTO_DB_BACKUP_OPTIMIZE'		=> $this->config['auto_db_backup_optimize'],
 			'S_OPTIMIZE_ALLOWED'			=> $optimize_allowed,
 
-			'AUTO_DB_BACKUP_GC'			=> $this->config['auto_db_backup_gc'] / 86400,
+			'AUTO_DB_BACKUP_GC'			=> $this->config['auto_db_backup_gc'] / self::INTERVAL_SECONDS[$unit],
+			'S_AUTO_DB_BACKUP_HOURS'		=> $unit === 'hours',
 			'AUTO_DB_BACKUP_COPIES'		=> $this->config['auto_db_backup_copies'],
 
 			'U_ACTION'					=> $this->u_action,
