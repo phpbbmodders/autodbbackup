@@ -25,6 +25,7 @@ $lang = array_merge($lang, array(
 	'ACP_AUTO_DB_BACKUP'					=> 'Auto Database Backup',
 	'ACP_AUTO_DB_BACKUP_SETTINGS'			=> 'Auto Database backup settings',
 	'LOG_AUTO_DB_BACKUP'					=> '<strong>Auto database backup completed</strong>',
+	'LOG_AUTO_DB_BACKUP_DIRECTORY_FAILED' => '<strong>Auto database backup could not write to the configured backup directory</strong>',
 	'LOG_AUTO_DB_BACKUP_DELETE_FAILED'	=> '<strong>Auto database backup could not remove an old backup</strong><br>» %s',
 	'LOG_AUTO_DB_BACKUP_SETTINGS_CHANGED'	=> '<strong>Altered Auto Database Backup settings</strong>',
 	//Donation

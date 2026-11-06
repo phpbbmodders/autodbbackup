@@ -19,6 +19,7 @@ use phpbb\db\driver\driver_interface as db;
 use phpbb\db\tools\tools_interface as db_tools;
 use phpbb\log\log;
 use phpbb\user;
+use pico\autodbbackup\backup_directory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class auto_db_backup extends \phpbb\cron\task\base
@@ -76,6 +77,14 @@ class auto_db_backup extends \phpbb\cron\task\base
 
 		$this->config->set('auto_db_backup_last_gc', $last_backup_date, false);
 
+		$directory = (string) $this->config['auto_db_backup_directory'];
+		$document_root = $directory !== '' ? $this->phpbb_container->get('request')->server('DOCUMENT_ROOT') : '';
+		if ($directory !== '' && !backup_directory::is_valid($directory, $this->root_path, $document_root))
+		{
+			$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_DIRECTORY_FAILED');
+			return;
+		}
+
 		// Optimize database tables before backup them (only unoptimized tables)
 		if ($this->config['auto_db_backup_optimize'])
 		{
@@ -128,7 +137,28 @@ class auto_db_backup extends \phpbb\cron\task\base
 		$suffixes = ['text' => '.sql', 'gzip' => '.sql.gz', 'bzip2' => '.sql.bz2'];
 		$current = $filename . $suffixes[$format];
 		$storage = null;
-		if (defined('BACKUPS_TABLE') && $this->phpbb_container->has('storage.backup'))
+		$native_storage = defined('BACKUPS_TABLE') && $this->phpbb_container->has('storage.backup');
+		if ($directory !== '')
+		{
+			$staging = $native_storage
+				? $this->phpbb_container->get('filesystem.temp')->get_dir() . '/'
+				: $this->root_path . 'store/';
+			if (!backup_directory::is_valid($directory, $this->root_path, $document_root)
+				|| !backup_directory::publish($staging . $current, $directory, $current))
+			{
+				if ($native_storage)
+				{
+					@unlink($staging . $current);
+				}
+				$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_DIRECTORY_FAILED');
+				return;
+			}
+			if (!@unlink($staging . $current))
+			{
+				$this->log_delete_failure($current);
+			}
+		}
+		else if ($native_storage)
 		{
 			$storage = $this->phpbb_container->get('storage.backup');
 			$this->store_backup($storage, $current);
@@ -137,7 +167,7 @@ class auto_db_backup extends \phpbb\cron\task\base
 		$copies = (int) $this->config['auto_db_backup_copies'];
 		if ($copies > 0)
 		{
-			$this->prune_backups($current, $copies, $storage);
+			$this->prune_backups($current, $copies, $storage, $directory === '' ? $this->root_path . 'store/' : $directory . '/');
 		}
 
 		$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP');
@@ -172,11 +202,10 @@ class auto_db_backup extends \phpbb\cron\task\base
 	/**
 	 * Retain the newest marked backups. Legacy and manual backups are unmarked.
 	 */
-	private function prune_backups(string $current, int $copies, $storage): void
+	private function prune_backups(string $current, int $copies, $storage, string $store): void
 	{
 		$pattern = '#\Abackup_([0-9]{10,})_' . self::BACKUP_MARKER . '[a-z0-9]{16}\.sql(?:\.(?:gz|bz2))?\z#';
 		$files = [];
-		$store = $this->root_path . 'store/';
 		if ($storage !== null)
 		{
 			$result = $this->db->sql_query('SELECT filename FROM ' . BACKUPS_TABLE);
