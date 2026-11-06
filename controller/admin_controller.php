@@ -173,27 +173,28 @@ class admin_controller
 				$errors[] = $this->user->lang('AUTO_DB_BACKUP_COPIES_ERROR');
 			}
 
-			$day = $this->request->variable('auto_db_backup_day', 0) - $this->config['auto_db_backup_gc'] / 86400;
+			$day = $this->request->variable('auto_db_backup_day', 0);
 			$month = $this->request->variable('auto_db_backup_month', 0);
 			$year = $this->request->variable('auto_db_backup_year', 0);
 			$hour = $this->request->variable('auto_db_backup_hour', 0);
 			$minute = $this->request->variable('auto_db_backup_minute', 0);
 
-			$backup_date = mktime($hour, $minute, 0, $month, $day, $year);
+			$next_backup = mktime($hour, $minute, 0, $month, $day, $year);
 
-			if ($backup_date + $this->config['auto_db_backup_gc'] <= time())
+			if ($next_backup <= time())
 			{
 				$errors[] = $this->user->lang('AUTO_DB_BACKUP_TIME_ERROR');
 			}
 
 			if (empty($errors))
 			{
+				$interval = $auto_db_backup_gc * 86400;
 				$this->config->set('auto_db_backup_enable', $this->request->variable('auto_db_backup_enable', 0));
 				$this->config->set('auto_db_backup_filetype', $this->request->variable('auto_db_backup_filetype', 'text'));
-				$this->config->set('auto_db_backup_gc', $this->request->variable('auto_db_backup_gc', 0) * 86400);
+				$this->config->set('auto_db_backup_gc', $interval);
 				$this->config->set('auto_db_backup_copies', $this->request->variable('auto_db_backup_copies', 0));
 				$this->config->set('auto_db_backup_optimize', $this->request->variable('auto_db_backup_optimize', 0));
-				$this->config->set('auto_db_backup_last_gc', $backup_date);
+				$this->config->set('auto_db_backup_last_gc', $next_backup - $interval);
 
 				$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_SETTINGS_CHANGED');
 
