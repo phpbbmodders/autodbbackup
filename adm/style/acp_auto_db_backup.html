@@ -35,7 +35,11 @@
 		</dl>
 		<dl>
 			<dt><label for="auto_db_backup_gc">{{ lang('AUTO_DB_BACKUP_FREQ') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_FREQ_EXPLAIN') }}</span></dt>
-			<dd><input id="auto_db_backup_gc" type="number" max="99" min="1" name="auto_db_backup_gc" value="{{ AUTO_DB_BACKUP_GC }}"  /> <span>{{ lang('DAYS') }}</span></dd>
+			<dd><input id="auto_db_backup_gc" type="number" max="99" min="1" name="auto_db_backup_gc" value="{{ AUTO_DB_BACKUP_GC }}"  />
+				<select name="auto_db_backup_gc_unit" aria-label="{{ lang('AUTO_DB_BACKUP_FREQ_UNIT') }}">
+					<option value="days"{% if not S_AUTO_DB_BACKUP_HOURS %} selected{% endif %}>{{ lang('DAYS') }}</option>
+					<option value="hours"{% if S_AUTO_DB_BACKUP_HOURS %} selected{% endif %}>{{ lang('HOURS') }}</option>
+				</select></dd>
 		</dl>
 		<dl>
 			<dt><label for="auto_db_backup_copies">{{ lang('AUTO_DB_BACKUP_COPIES') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_COPIES_EXPLAIN') }}</span></dt>

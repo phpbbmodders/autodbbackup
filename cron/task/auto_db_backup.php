@@ -61,8 +61,18 @@ class auto_db_backup extends \phpbb\cron\task\base
 		// this is required for the get_usable_memory function
 		include($this->root_path . 'includes/acp/acp_database.' . $this->php_ext);
 
-		$backup_date = getdate($this->config['auto_db_backup_last_gc']);
-		$last_backup_date = mktime($backup_date['hours'], $backup_date['minutes'], 0, date("m"), date("j"), date("Y"));
+		$last_backup = (int) $this->config['auto_db_backup_last_gc'];
+		if ($this->config['auto_db_backup_gc_unit'] === 'hours')
+		{
+			// Keep the configured cadence when cron starts late. Skip missed runs.
+			$interval = max(3600, (int) $this->config['auto_db_backup_gc']);
+			$last_backup_date = $last_backup + intdiv(max(0, time() - $last_backup), $interval) * $interval;
+		}
+		else
+		{
+			$backup_date = getdate($last_backup);
+			$last_backup_date = mktime($backup_date['hours'], $backup_date['minutes'], 0, date("m"), date("j"), date("Y"));
+		}
 
 		$this->config->set('auto_db_backup_last_gc', $last_backup_date, false);
 
