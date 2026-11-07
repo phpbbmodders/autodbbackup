@@ -192,7 +192,9 @@ class admin_controller
 				$errors[] = $this->language->lang('AUTO_DB_BACKUP_COPIES_ERROR');
 			}
 
-			if ($directory !== '' && !backup_directory::is_valid($directory, $this->root_path, $this->request->server('DOCUMENT_ROOT')))
+			// phpBB stores config values in a 255-character column
+			if ($directory !== '' && (utf8_strlen($directory) > 255
+				|| !backup_directory::is_valid($directory, $this->root_path, $this->request->server('DOCUMENT_ROOT'))))
 			{
 				$errors[] = $this->language->lang('AUTO_DB_BACKUP_DIRECTORY_ERROR');
 			}
