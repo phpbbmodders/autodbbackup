@@ -14,9 +14,14 @@ Automatically backs up your database using phpBB cron.
 
 ## Screenshots
 
-<a href="docs/images/screenshots/autodbbackup-acp-settings.png"><img src="docs/images/screenshots/autodbbackup-acp-settings.png" width="440" alt="Auto Database Backup settings in the ACP"></a>
+<table>
+<tr>
+<td><a href="docs/images/screenshots/autodbbackup-acp-settings.png"><img src="docs/images/screenshots/autodbbackup-acp-settings.png" width="440" height="310" alt="Auto Database Backup settings in the ACP"></a></td>
+<td><a href="docs/images/screenshots/autodbbackup-acp-restore.png"><img src="docs/images/screenshots/autodbbackup-acp-restore.png" width="440" height="121" alt="Automatic backups in ACP Restore"></a></td>
+</tr>
+</table>
 
-Click the image for the full size. See the [screenshot gallery](docs/images/screenshots/README.md) for captions.
+Click an image for the full size. See the [screenshot gallery](docs/images/screenshots/README.md) for captions.
 
 ## Requirements
 
