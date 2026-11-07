@@ -1,6 +1,6 @@
 services:
-    pico.autodbbackup.cron.task.core.auto_db_backup:
-        class: pico\autodbbackup\cron\task\auto_db_backup
+    phpbbmodders.autodbbackup.cron.task.core.auto_db_backup:
+        class: phpbbmodders\autodbbackup\cron\task\auto_db_backup
         arguments:
             - '@config'
             - '@dbal.conn'
@@ -10,13 +10,14 @@ services:
             - '@service_container'
             - '%core.root_path%'
             - '%core.php_ext%'
+            - '%core.table_prefix%'
         calls:
-            - [set_name, [pico.autodbbackup.cron.task.auto_db_backup]]
+            - [set_name, [phpbbmodders.autodbbackup.cron.task.auto_db_backup]]
         tags:
             - { name: cron.task }
 
-    pico.autodbbackup.admin.controller:
-        class: pico\autodbbackup\controller\admin_controller
+    phpbbmodders.autodbbackup.admin.controller:
+        class: phpbbmodders\autodbbackup\controller\admin_controller
         arguments:
             - '@config'
             - '@dbal.conn'

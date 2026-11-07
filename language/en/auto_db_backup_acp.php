@@ -1,13 +1,14 @@
 <?php
 /**
-*
-* Auto Database Backup
-*
-* @copyright (c) 2023 Rich McGirr
-* @copyright (c) 2014 Lukasz Kaczynski
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-*/
+ *
+ * Auto Database Backup extension for the phpBB Forum Software package
+ *
+ * @copyright (c) 2023 Rich McGirr
+ * @copyright (c) 2014 Lukasz Kaczynski
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ */
 
 /**
 * DO NOT CHANGE
@@ -37,14 +38,13 @@ $lang = array_merge($lang, array(
 	'AUTO_DB_BACKUP_COPIES_ERROR'			=> 'Entered value for <em>Stored backups</em> is incorrect. Value must be equal or higher than <strong>0</strong>.',
 	'AUTO_DB_BACKUP_FILETYPE'				=> 'File type',
 	'AUTO_DB_BACKUP_FILETYPE_EXPLAIN'		=> 'Choose the file type for backups.',
+	'AUTO_DB_BACKUP_FILETYPE_ERROR'			=> 'Choose one of the file types listed.',
 	'AUTO_DB_BACKUP_OPTIMIZE'				=> 'Optimize DB before backup',
 	'AUTO_DB_BACKUP_OPTIMIZE_EXPLAIN'		=> 'Optimize only unoptimized database tables before making the backup. This works only for MYSQL databases.',
 	'AUTO_DB_BACKUP_OPTIMIZE_NO'			=> 'The database in use on the forum is not <strong>MYSQL</strong>!',
 	'AUTO_DB_BACKUP_TIME'					=> 'Next backup time',
 	'AUTO_DB_BACKUP_TIME_EXPLAIN'			=> 'Specify when a following database backup should be made.<br><strong>Note</strong>: you must specify a time in the future.',
 	'AUTO_DB_BACKUP_TIME_ERROR'				=> 'The <em>next backup time</em> is incorrect. The time has to be defined in the future.',
-
-	'HOUR'		=> 'Hour',
-	'MINUTE'	=> 'Minute',
-	'AUTODBBACKUP_REQUIRE'					=> 'This extension requires phpBB 3.3 and PHP 7.4. Please ensure the requirements of the extension are met or the extension will not be installed.'
+	'AUTO_DB_BACKUP_HOUR'					=> 'Hour',
+	'AUTO_DB_BACKUP_MINUTE'					=> 'Minute',
 ));

@@ -13,3 +13,5 @@ phpunit.xml.*	export-ignore
 build.xml		export-ignore
 composer.lock	export-ignore
 README.md		export-ignore
+docs/			export-ignore
+.editorconfig	export-ignore

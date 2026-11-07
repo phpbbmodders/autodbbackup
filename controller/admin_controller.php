@@ -1,14 +1,15 @@
 <?php
 /**
-*
-* Auto Database Backup
-*
-* @copyright 2024 Rich McGirr (RMcGirr83)
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-*/
+ *
+ * Auto Database Backup extension for the phpBB Forum Software package
+ *
+ * @copyright 2024 Rich McGirr (RMcGirr83)
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ */
 
-namespace pico\autodbbackup\controller;
+namespace phpbbmodders\autodbbackup\controller;
 
 use phpbb\config\config;
 use phpbb\db\driver\driver_interface as db;
@@ -79,7 +80,7 @@ class admin_controller
 	public function settings()
 	{
 		$this->language->add_lang('acp/common');
-		$this->language->add_lang('auto_db_backup_acp', 'pico/autodbbackup');
+		$this->language->add_lang('auto_db_backup_acp', 'phpbbmodders/autodbbackup');
 
 		// Create a form key for preventing CSRF attacks
 		add_form_key('acp_auto_db_backup');
@@ -128,11 +129,11 @@ class admin_controller
 			));
 		}
 
-		// Years
-		for ($i = date("Y"); $i < (date("Y") + 1); $i++)
+		// Years: this one and the next, so a backup due in January can be chosen in December
+		for ($i = (int) date('Y'); $i <= (int) date('Y') + 1; $i++)
 		{
 			$this->template->assign_block_vars('years', array(
-				'S_SELECTED'	=> ($i == date("Y")) ? true : false,
+				'S_SELECTED'	=> ($i == $backup_date['year']) ? true : false,
 				'YEAR'			=> $i,
 			));
 		}
@@ -161,20 +162,27 @@ class admin_controller
 			$auto_db_backup_gc = $this->request->variable('auto_db_backup_gc', 0);
 			$submitted_unit = $this->request->variable('auto_db_backup_gc_unit', 'days');
 			$auto_db_backup_copies = $this->request->variable('auto_db_backup_copies', 0);
+			$filetype = $this->request->variable('auto_db_backup_filetype', 'text');
 
 			if (!check_form_key('acp_auto_db_backup'))
 			{
-				$errors[] = $this->user->lang('FORM_INVALID');
+				$errors[] = $this->language->lang('FORM_INVALID');
 			}
 
 			if ($auto_db_backup_gc < 1 || $auto_db_backup_gc > 99 || !isset(self::INTERVAL_SECONDS[$submitted_unit]))
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_FREQ_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_FREQ_ERROR');
+			}
+
+			// Only a file type this server can write
+			if (!in_array($filetype, $filetypes, true))
+			{
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_FILETYPE_ERROR');
 			}
 
 			if ($auto_db_backup_copies < 0)
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_COPIES_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_COPIES_ERROR');
 			}
 
 			$day = $this->request->variable('auto_db_backup_day', 0);
@@ -187,14 +195,14 @@ class admin_controller
 
 			if ($next_backup <= time())
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_TIME_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_TIME_ERROR');
 			}
 
 			if (empty($errors))
 			{
 				$interval = $auto_db_backup_gc * self::INTERVAL_SECONDS[$submitted_unit];
 				$this->config->set('auto_db_backup_enable', $this->request->variable('auto_db_backup_enable', 0));
-				$this->config->set('auto_db_backup_filetype', $this->request->variable('auto_db_backup_filetype', 'text'));
+				$this->config->set('auto_db_backup_filetype', $filetype);
 				$this->config->set('auto_db_backup_gc', $interval);
 				$this->config->set('auto_db_backup_gc_unit', $submitted_unit);
 				$this->config->set('auto_db_backup_copies', $this->request->variable('auto_db_backup_copies', 0));
@@ -203,7 +211,7 @@ class admin_controller
 
 				$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_SETTINGS_CHANGED');
 
-				trigger_error($this->user->lang('AUTO_DB_BACKUP_SETTINGS_CHANGED') . adm_back_link($this->u_action));
+				trigger_error($this->language->lang('AUTO_DB_BACKUP_SETTINGS_CHANGED') . adm_back_link($this->u_action));
 			}
 		}
 
