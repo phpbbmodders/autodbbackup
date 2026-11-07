@@ -1,30 +1,70 @@
-# phpBB Auto Database Backup
+# Auto Database Backup
 
-This is the repository for the development of the phpBB Auto Database Backup Extension.
+[![Tests](https://github.com/phpbbmodders/autodbbackup/actions/workflows/tests.yml/badge.svg)](https://github.com/phpbbmodders/autodbbackup/actions/workflows/tests.yml) [![Lint](https://github.com/phpbbmodders/autodbbackup/actions/workflows/lint.yml/badge.svg)](https://github.com/phpbbmodders/autodbbackup/actions/workflows/lint.yml)
 
-[![Build Status](https://github.com/rmcgirr83/autodbbackup/workflows/Tests/badge.svg)](https://github.com/rmcgirr83/autodbbackup/actions)
+Automatically backs up your database using phpBB cron.
 
-## Quick Install
+## Features
 
-1. [Download the latest release](https://github.com/RMcGirr83/autodbbackup).
-2. Unzip the downloaded release, and change the name of the folder to `autodbbackup`.
-3. In the `ext` directory of your phpBB board, create a new directory named `pico` (if it does not already exist).
-4. Copy the `autodbbackup` folder to `phpBB/ext/pico/`.
-5. Navigate in the ACP to `Customise -> Manage extensions`.
-6. Look for `Auto Database Backup` under the Disabled Extensions list, and click its `Enable` link.
-7. Set up and configure `Auto Database Backup` by navigating in the ACP to `Maintenance` -> `Database` -> `Auto backup settings`.
+- Backs up every database table on a schedule, every 1 to 99 hours or days, starting at a date and time you choose.
+- Saves backups as plain SQL, gzip or bzip2, depending on what the server supports.
+- Keeps only the newest automatic backups, as many as you set. Manual backups and backups from older versions are never deleted.
+- Backups appear in **ACP → Maintenance → Restore**, like the ones phpBB makes itself.
+- On MySQL, can optimize fragmented tables before each backup.
+
+## Screenshots
+
+<a href="docs/images/screenshots/autodbbackup-acp-settings.png"><img src="docs/images/screenshots/autodbbackup-acp-settings.png" width="440" alt="Auto Database Backup settings in the ACP"></a>
+
+Click the image for the full size. See the [screenshot gallery](docs/images/screenshots/README.md) for captions.
+
+## Requirements
+
+- phpBB 3.3.19 or later, including phpBB 4.0 (tested on its 4.0.0-a3 development version)
+- PHP 8.3.36 or later
+
+## Installation
+
+1. Copy the extension to `/ext/phpbbmodders/autodbbackup`
+2. In the Administration Control Panel, go to **Customise → Manage extensions**
+3. Enable the **Auto Database Backup** extension
+4. Choose the settings under **ACP → Maintenance → Database → Auto Database Backup**
+
+### Upgrading from `pico/autodbbackup`
+
+This extension used to be installed as `pico/autodbbackup`. Its settings and existing backups carry over:
+
+1. Disable the old **Auto Database Backup** extension in the ACP. Do **not** delete its data.
+2. Upload this version to `/ext/phpbbmodders/autodbbackup` and enable it. The old install's migration history and ACP page are moved to the new name automatically.
+3. Delete the `/ext/pico/autodbbackup` folder and purge the board cache.
+
+If you disable the old extension from the command line (`bin/phpbbcli.php`) instead of the ACP, run `bin/phpbbcli.php cache:purge` before enabling the new one; the command-line disable doesn't clear the cache.
 
 ## Backup retention
 
-The copies setting applies to automatic backups created with the current naming
-format. Older and manual backups are kept for manual review and removal. New
-automatic backups appear in ACP Restore on phpBB 3.3 and 4.0.
+The **Stored backups** setting applies to automatic backups made by version 2.2.0 or later, which carry a marker in their file names. Older and manual backups are kept for you to review and remove. `0` keeps every backup.
 
 ## Uninstall
 
-1. Navigate in the ACP to `Customise -> Extension Management -> Extensions`.
-2. Look for `Auto Database Backup` under the Enabled Extensions list, and click its `Disable` link.
-3. To permanently uninstall, click `Delete Data` and then delete the `/ext/pico/autodbbackup` folder.
+1. In the ACP, go to **Customise → Manage extensions** and disable **Auto Database Backup**.
+2. To remove its settings too, click **Delete data**, then delete the `/ext/phpbbmodders/autodbbackup` folder. Backup files stay where they are.
+
+## Contributing
+
+Contributions are welcome!
+
+- **Bug reports**: [Open an issue](https://github.com/phpbbmodders/autodbbackup/issues).
+- **Everything else** (questions, feature requests, ideas, general discussion): [Use Discussions](https://github.com/orgs/phpbbmodders/discussions), or the [community forum](https://www.phpbbmodders.com/community/).
+- Pull requests are welcome for bug fixes or discussed features.
+
+## Acknowledgments
+
+- Original extension by Lukasz Kaczynski (pico), later maintained by Rich McGirr ([RMcGirr83](https://github.com/rmcgirr83)).
+- Code review, bug fixes, and documentation assisted by [Claude](https://www.anthropic.com/claude).
+- Backup retention, phpBB 4.0 storage and hourly schedules assisted by [Codex](https://openai.com/codex/).
 
 ## License
-[GNU General Public License v2](http://opensource.org/licenses/GPL-2.0)
+
+This extension is licensed under the **GNU General Public License v2.0**.
+
+See [license.txt](license.txt) for more information.

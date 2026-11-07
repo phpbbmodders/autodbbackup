@@ -1,14 +1,15 @@
 <?php
 /**
-*
-* Auto Database Backup
-*
-* @copyright 2024 Rich McGirr (RMcGirr83)
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-*/
+ *
+ * Auto Database Backup extension for the phpBB Forum Software package
+ *
+ * @copyright 2024 Rich McGirr (RMcGirr83)
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ */
 
-namespace pico\autodbbackup\controller;
+namespace phpbbmodders\autodbbackup\controller;
 
 use phpbb\config\config;
 use phpbb\db\driver\driver_interface as db;
@@ -79,7 +80,7 @@ class admin_controller
 	public function settings()
 	{
 		$this->language->add_lang('acp/common');
-		$this->language->add_lang('auto_db_backup_acp', 'pico/autodbbackup');
+		$this->language->add_lang('auto_db_backup_acp', 'phpbbmodders/autodbbackup');
 
 		// Create a form key for preventing CSRF attacks
 		add_form_key('acp_auto_db_backup');
@@ -164,17 +165,17 @@ class admin_controller
 
 			if (!check_form_key('acp_auto_db_backup'))
 			{
-				$errors[] = $this->user->lang('FORM_INVALID');
+				$errors[] = $this->language->lang('FORM_INVALID');
 			}
 
 			if ($auto_db_backup_gc < 1 || $auto_db_backup_gc > 99 || !isset(self::INTERVAL_SECONDS[$submitted_unit]))
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_FREQ_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_FREQ_ERROR');
 			}
 
 			if ($auto_db_backup_copies < 0)
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_COPIES_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_COPIES_ERROR');
 			}
 
 			$day = $this->request->variable('auto_db_backup_day', 0);
@@ -187,7 +188,7 @@ class admin_controller
 
 			if ($next_backup <= time())
 			{
-				$errors[] = $this->user->lang('AUTO_DB_BACKUP_TIME_ERROR');
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_TIME_ERROR');
 			}
 
 			if (empty($errors))
@@ -203,7 +204,7 @@ class admin_controller
 
 				$this->log->add('admin', $this->user->data['user_id'], $this->user->ip, 'LOG_AUTO_DB_BACKUP_SETTINGS_CHANGED');
 
-				trigger_error($this->user->lang('AUTO_DB_BACKUP_SETTINGS_CHANGED') . adm_back_link($this->u_action));
+				trigger_error($this->language->lang('AUTO_DB_BACKUP_SETTINGS_CHANGED') . adm_back_link($this->u_action));
 			}
 		}
 

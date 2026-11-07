@@ -24,30 +24,30 @@
 			<dt><label for="auto_db_backup_filetype">{{ lang('AUTO_DB_BACKUP_FILETYPE') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_FILETYPE_EXPLAIN') }}</span></dt>
 			<dd>
 				{% for filetypes in loops.filetypes %}
-					<label><input type="radio" class="radio" id="auto_db_backup_filetype" name="auto_db_backup_filetype" value="{{ filetypes.FILETYPE }}" {% if filetypes.S_CHECKED %} checked="checked"{% endif %} /> {{ filetypes.FILETYPE }}</label>
+					<label><input type="radio" class="radio" {% if loop.first %}id="auto_db_backup_filetype" {% endif %}name="auto_db_backup_filetype" value="{{ filetypes.FILETYPE }}" {% if filetypes.S_CHECKED %} checked="checked"{% endif %} /> {{ filetypes.FILETYPE }}</label>
 				{% endfor %}
 			</dd>
 		</dl>
 		<dl>
 			<dt><label for="auto_db_backup_optimize">{{ lang('AUTO_DB_BACKUP_OPTIMIZE') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_OPTIMIZE_EXPLAIN') }}</span></dt>
 			<dd>{% if S_OPTIMIZE_ALLOWED %}<label><input type="radio" class="radio" id="auto_db_backup_optimize" name="auto_db_backup_optimize" value="1" {% if S_AUTO_DB_BACKUP_OPTIMIZE %}checked="checked"{% endif %} /> {{ lang('ENABLED') }}</label>
-				<label><input type="radio" class="radio" name="auto_db_backup_optimize" value="0" {% if not S_AUTO_DB_BACKUP_OPTIMIZE %}checked="checked"{% endif %} /> {{ lang('DISABLED') }}</label>{% else %}{{ lang('AUTO_DB_BACKUP_OPTIMIZE_NO') }}</dd>{% endif %}
+				<label><input type="radio" class="radio" name="auto_db_backup_optimize" value="0" {% if not S_AUTO_DB_BACKUP_OPTIMIZE %}checked="checked"{% endif %} /> {{ lang('DISABLED') }}</label>{% else %}{{ lang('AUTO_DB_BACKUP_OPTIMIZE_NO') }}{% endif %}</dd>
 		</dl>
 		<dl>
 			<dt><label for="auto_db_backup_gc">{{ lang('AUTO_DB_BACKUP_FREQ') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_FREQ_EXPLAIN') }}</span></dt>
-			<dd><input id="auto_db_backup_gc" type="number" max="99" min="1" name="auto_db_backup_gc" value="{{ AUTO_DB_BACKUP_GC }}"  />
-				<select name="auto_db_backup_gc_unit" aria-label="{{ lang('AUTO_DB_BACKUP_FREQ_UNIT') }}">
+			<dd><input id="auto_db_backup_gc" type="number" max="99" min="1" name="auto_db_backup_gc" value="{{ AUTO_DB_BACKUP_GC }}" />
+				<select id="auto_db_backup_gc_unit" name="auto_db_backup_gc_unit" aria-label="{{ lang('AUTO_DB_BACKUP_FREQ_UNIT') }}">
 					<option value="days"{% if not S_AUTO_DB_BACKUP_HOURS %} selected{% endif %}>{{ lang('DAYS') }}</option>
 					<option value="hours"{% if S_AUTO_DB_BACKUP_HOURS %} selected{% endif %}>{{ lang('HOURS') }}</option>
 				</select></dd>
 		</dl>
 		<dl>
 			<dt><label for="auto_db_backup_copies">{{ lang('AUTO_DB_BACKUP_COPIES') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_COPIES_EXPLAIN') }}</span></dt>
-			<dd><input  id="auto_db_backup_copies" type="number" max="99" min="0" name="auto_db_backup_copies" value="{{ AUTO_DB_BACKUP_COPIES }}"/></dd>
+			<dd><input id="auto_db_backup_copies" type="number" max="99" min="0" name="auto_db_backup_copies" value="{{ AUTO_DB_BACKUP_COPIES }}"/></dd>
 		</dl>
 		<dl>
-			<dt><label for="auto_db_backup_day">{{ lang('AUTO_DB_BACKUP_TIME') }}{{ lang('COLON') }}</label><br /><span>{{ lang('AUTO_DB_BACKUP_TIME_EXPLAIN') }}</span></dt>
-			<dd>
+			<dt><label id="auto_db_backup_time_label">{{ lang('AUTO_DB_BACKUP_TIME') }}{{ lang('COLON') }}</label><br /><span id="auto_db_backup_time_explain">{{ lang('AUTO_DB_BACKUP_TIME_EXPLAIN') }}</span></dt>
+			<dd role="group" aria-labelledby="auto_db_backup_time_label" aria-describedby="auto_db_backup_time_explain">
 				<label for="auto_db_backup_day">{{ lang('DAY') }}{{ lang('COLON') }}
 					<select name="auto_db_backup_day" id="auto_db_backup_day">
 					{% for days in loops.days %}
@@ -98,10 +98,4 @@
 
 	</fieldset>
 </form>
-<fieldset>
-	<dl>
-		<dt><label>{{ lang('BUY_ME_A_BEER_SHORT') }}{{ lang('COLON') }}</label><br /><span>{{ lang('BUY_ME_A_BEER_EXPLAIN') }}</span></dt>
-		<dd><a href="{{ lang('BUY_ME_A_BEER_URL') }}" target="_blank" rel="noreferrer noopener"><img src="{{ lang('PAYPAL_IMAGE_URL') }}" alt="{{ lang('PAYPAL_ALT') }}" style="cursor: pointer; margin-top: 15px;"></a></dd>
-	</dl>
-</fieldset>
 {% INCLUDE 'overall_footer.html' %}

@@ -1,15 +1,16 @@
 <?php
 /**
-*
-* Auto Database Backup
-*
-* @copyright (c) 2023 Rich McGirr
-* @copyright (c) 2014 Lukasz Kaczynski
-* @license GNU General Public License, version 2 (GPL-2.0)
-*
-*/
+ *
+ * Auto Database Backup extension for the phpBB Forum Software package
+ *
+ * @copyright (c) 2023 Rich McGirr
+ * @copyright (c) 2014 Lukasz Kaczynski
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ */
 
-namespace pico\autodbbackup\cron\task;
+namespace phpbbmodders\autodbbackup\cron\task;
 
 /**
 * @ignore
@@ -24,6 +25,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class auto_db_backup extends \phpbb\cron\task\base
 {
 	// Combined with unique_id(), this fits phpBB's 32-character backup identifier.
+	// It keeps the old vendor name so backups made before the move to
+	// phpbbmodders/autodbbackup are still found and pruned.
 	private const BACKUP_MARKER = 'picoautodbbackup';
 
 	protected $config;

@@ -1,40 +1,64 @@
 <?php
 /**
-*
-* @package Auto database backup
-* @copyright (c) 2023 Rich McGirr(RMcGirr83)
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License
-*
-*/
+ *
+ * Auto Database Backup extension for the phpBB Forum Software package
+ *
+ * @copyright (c) 2023 Rich McGirr(RMcGirr83)
+ * @copyright (c) 2026, phpBB Modders, https://www.phpbbmodders.com/
+ * @license GNU General Public License, version 2 (GPL-2.0)
+ *
+ */
 
-namespace pico\autodbbackup;
+namespace phpbbmodders\autodbbackup;
 
 /**
-* Extension class for custom enable/disable/purge actions
-*/
+ * Auto Database Backup extension base
+ *
+ * Handles the switch from the old "pico/autodbbackup" package name: an existing
+ * install's data is moved over to the new name when this extension is
+ * enabled, so nothing is installed twice and no settings are lost.
+ */
 class ext extends \phpbb\extension\base
 {
+	/** Package name this extension used before the rename */
+	const OLD_EXT_NAME = 'pico/autodbbackup';
+
+	/** Package name this extension uses now */
+	const NEW_EXT_NAME = 'phpbbmodders/autodbbackup';
+
+	/** PHP namespace prefix used before the rename */
+	const OLD_NAMESPACE = '\\pico\\autodbbackup\\';
+
+	/** PHP namespace prefix used now */
+	const NEW_NAMESPACE = '\\phpbbmodders\\autodbbackup\\';
+
 	/**
-	 * Check whether the extension can be enabled.
-	 * The current phpBB and PHP version should meet or
-	 * exceed the minimum version required by this extension:
+	 * Refuse to enable below the minimum phpBB and PHP versions.
 	 *
-	 * @return bool|array
-	 * @access public
+	 * Refuse to enable while the old copy is still enabled; both would run
+	 * at once and the old one's data can't be moved while it's in use.
+	 *
+	 * @return bool|string|array True if enableable, otherwise a reason string or array of reasons
 	 */
 	public function is_enableable()
 	{
-		$enableable = $this->check_phpbb_version() && $this->check_php_version();
-
-		if (!$enableable)
+		if (!$this->check_phpbb_version() || !$this->check_php_version())
 		{
 			$language = $this->container->get('language');
-			$language->add_lang('autodbbackup_install', 'pico/autodbbackup');
+			$language->add_lang('autodbbackup_install', 'phpbbmodders/autodbbackup');
 
 			return $language->lang('AUTODBBACKUP_NOT_ENABLEABLE');
 		}
 
-		return $enableable;
+		if ($this->container->get('ext.manager')->is_enabled(self::OLD_EXT_NAME))
+		{
+			$language = $this->container->get('language');
+			$language->add_lang('autodbbackup_install', 'phpbbmodders/autodbbackup');
+
+			return $language->lang('AUTODBBACKUP_DISABLE_OLD', self::OLD_EXT_NAME);
+		}
+
+		return true;
 	}
 
 	/**
@@ -42,7 +66,7 @@ class ext extends \phpbb\extension\base
 	 *
 	 * @return bool
 	 */
-	protected function check_phpbb_version()
+	public function check_phpbb_version()
 	{
 		return phpbb_version_compare(PHPBB_VERSION, '3.3.19', '>=');
 	}
@@ -52,8 +76,132 @@ class ext extends \phpbb\extension\base
 	 *
 	 * @return bool
 	 */
-	protected function check_php_version()
+	public function check_php_version()
 	{
 		return PHP_VERSION_ID >= 80336;
+	}
+
+	/**
+	 * Move an old install's data to the new name, then enable as usual.
+	 *
+	 * @param mixed $old_state State returned by previous call of this method
+	 * @return bool|string
+	 */
+	public function enable_step($old_state)
+	{
+		if ($old_state === false)
+		{
+			$this->move_old_install();
+
+			// The migrator loaded its state before this ran; reload it so the
+			// moved migration history counts as already installed.
+			$this->migrator->load_migration_state();
+		}
+
+		return parent::enable_step($old_state);
+	}
+
+	/**
+	 * Rewrite everything the database stores under the old name.
+	 *
+	 * Rows are filtered in PHP rather than with LIKE, because namespace
+	 * backslashes and underscores are special characters in LIKE patterns
+	 * on some databases. The tables involved are small, and each changed row
+	 * gets its own new value, so it is one UPDATE per row; this runs once,
+	 * when an old install is moved.
+	 */
+	protected function move_old_install()
+	{
+		$db = $this->container->get('dbal.conn');
+
+		$db->sql_transaction('begin');
+
+		// Migration history, including each migration's dependency list
+		$sql = 'SELECT migration_name, migration_depends_on
+			FROM ' . MIGRATIONS_TABLE;
+		$result = $db->sql_query($sql);
+		$rows = $db->sql_fetchrowset($result);
+		$db->sql_freeresult($result);
+
+		foreach ($rows as $row)
+		{
+			// Other extensions' migrations may depend on ours, so their
+			// dependency lists are rewritten too, not just our own rows
+			$old_depends_on = unserialize($row['migration_depends_on'], ['allowed_classes' => false]);
+			$old_depends_on = is_array($old_depends_on) ? $old_depends_on : [];
+			$depends_on = array_map([$this, 'new_class_name'], $old_depends_on);
+			$name = $this->new_class_name($row['migration_name']);
+
+			if ($name === $row['migration_name'] && $depends_on === $old_depends_on)
+			{
+				continue;
+			}
+
+			$sql = 'UPDATE ' . MIGRATIONS_TABLE . '
+				SET ' . $db->sql_build_array('UPDATE', [
+					'migration_name'		=> $name,
+					'migration_depends_on'	=> serialize($depends_on),
+				]) . "
+				WHERE migration_name = '" . $db->sql_escape($row['migration_name']) . "'";
+			$db->sql_query($sql);
+		}
+
+		// Module classes and their "ext_vendor/name" auth checks
+		$sql = 'SELECT module_id, module_basename, module_auth
+			FROM ' . MODULES_TABLE;
+		$result = $db->sql_query($sql);
+		$rows = $db->sql_fetchrowset($result);
+		$db->sql_freeresult($result);
+
+		foreach ($rows as $row)
+		{
+			$basename = $this->new_class_name($row['module_basename']);
+			$auth = str_replace('ext_' . self::OLD_EXT_NAME, 'ext_' . self::NEW_EXT_NAME, $row['module_auth']);
+
+			if ($basename !== $row['module_basename'] || $auth !== $row['module_auth'])
+			{
+				$sql = 'UPDATE ' . MODULES_TABLE . '
+					SET ' . $db->sql_build_array('UPDATE', [
+						'module_basename'	=> $basename,
+						'module_auth'		=> $auth,
+					]) . '
+					WHERE module_id = ' . (int) $row['module_id'];
+				$db->sql_query($sql);
+			}
+		}
+
+		// The old extension's own record (only once it's disabled)
+		$sql = 'DELETE FROM ' . EXT_TABLE . "
+			WHERE ext_name = '" . $db->sql_escape(self::OLD_EXT_NAME) . "'
+				AND ext_active = 0";
+		$db->sql_query($sql);
+
+		$db->sql_transaction('commit');
+	}
+
+	/**
+	 * Map an old fully qualified class name to the new namespace.
+	 *
+	 * @param string $class_name Class name, possibly under the old namespace
+	 * @return string
+	 */
+	protected function new_class_name($class_name)
+	{
+		if (!is_string($class_name))
+		{
+			return $class_name;
+		}
+
+		// Class names may be stored with or without the leading backslash
+		foreach ([self::OLD_NAMESPACE, ltrim(self::OLD_NAMESPACE, '\\')] as $old)
+		{
+			if (strpos($class_name, $old) === 0)
+			{
+				$new = ($old === self::OLD_NAMESPACE) ? self::NEW_NAMESPACE : ltrim(self::NEW_NAMESPACE, '\\');
+				return $new . substr($class_name, strlen($old));
+			}
+		}
+
+		return $class_name;
 	}
 }
