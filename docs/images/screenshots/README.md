@@ -4,9 +4,9 @@ Taken on phpBB 3.3.19 with SQLite, so the MySQL-only optimize setting is not off
 
 ## ACP settings
 
-**ACP → Maintenance → Database → Auto Database Backup**, set to make a gzip backup every day and keep the newest seven.
+**ACP → Maintenance → Database → Auto Database Backup**, set to make a gzip backup every day and keep the newest seven, in phpBB's default location (Backup directory left blank).
 
-[<img src="autodbbackup-acp-settings.png" width="640" height="451" alt="Auto Database Backup settings page with backups enabled, gzip file type, a frequency of 1 day, 7 stored backups and the next backup time." />](autodbbackup-acp-settings.png)
+[<img src="autodbbackup-acp-settings.png" width="640" height="450" alt="Auto Database Backup settings page with backups enabled, gzip file type, a frequency of 1 day, 7 stored backups, a blank backup directory and the next backup time." />](autodbbackup-acp-settings.png)
 
 ## ACP Restore
 
