@@ -23,7 +23,7 @@ class auto_db_backup_module
 	/** @var string Page title */
 	public $page_title;
 
-	function main($id, $mode)
+	public function main($id, $mode)
 	{
 		global $phpbb_container;
 

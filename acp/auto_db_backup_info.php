@@ -13,7 +13,7 @@ namespace phpbbmodders\autodbbackup\acp;
 
 class auto_db_backup_info
 {
-	function module()
+	public function module()
 	{
 		return array(
 			'filename'	=> '\phpbbmodders\autodbbackup\acp\auto_db_backup_module',
