@@ -9,7 +9,7 @@ Automatically backs up your database using phpBB cron.
 - Backs up every database table on a schedule, every 1 to 99 hours or days, starting at a date and time you choose.
 - Saves backups as plain SQL, gzip or bzip2, depending on what the server supports.
 - Keeps only the newest automatic backups, as many as you set. Manual backups and backups from older versions are never deleted.
-- Backups appear in **ACP → Maintenance → Restore**, like the ones phpBB makes itself.
+- Backups appear in **ACP → Maintenance → Restore**, like the ones phpBB makes itself, or go to a private directory outside the web root that you choose.
 - On MySQL, can optimize fragmented tables before each backup.
 
 ## Screenshots
@@ -48,6 +48,12 @@ If you disable the old extension from the command line (`bin/phpbbcli.php`) inst
 ## Backup retention
 
 The **Stored backups** setting applies to automatic backups made by version 2.2.0 or later, which carry a marker in their file names. Older and manual backups are kept for you to review and remove. `0` keeps every backup.
+
+## Custom backup directory
+
+Leave **Backup directory** blank to keep phpBB's default destination and ACP Restore integration. A custom directory must already exist and be private: writable by the PHP process, closed to other users (for example mode 0700 or 0750), and outside every web document root. Enter its absolute path without symbolic links or a trailing slash.
+
+Changing the setting leaves existing backups where they are. Retention applies only to automatic backups in the selected directory. Backups in a custom directory are not listed in ACP Restore on either phpBB branch; restore one with a database tool. phpBB 3.3 first writes the backup to the board's protected `store/` folder, then the extension moves it to the custom directory.
 
 ## Uninstall
 
