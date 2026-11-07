@@ -14,7 +14,14 @@ namespace phpbbmodders\autodbbackup\acp;
 
 class auto_db_backup_module
 {
+	/** @var string Form action URL */
 	public $u_action;
+
+	/** @var string Template file name */
+	public $tpl_name;
+
+	/** @var string Page title */
+	public $page_title;
 
 	function main($id, $mode)
 	{

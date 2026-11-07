@@ -129,11 +129,11 @@ class admin_controller
 			));
 		}
 
-		// Years
-		for ($i = date("Y"); $i < (date("Y") + 1); $i++)
+		// Years: this one and the next, so a backup due in January can be chosen in December
+		for ($i = (int) date('Y'); $i <= (int) date('Y') + 1; $i++)
 		{
 			$this->template->assign_block_vars('years', array(
-				'S_SELECTED'	=> ($i == date("Y")) ? true : false,
+				'S_SELECTED'	=> ($i == $backup_date['year']) ? true : false,
 				'YEAR'			=> $i,
 			));
 		}
@@ -162,6 +162,7 @@ class admin_controller
 			$auto_db_backup_gc = $this->request->variable('auto_db_backup_gc', 0);
 			$submitted_unit = $this->request->variable('auto_db_backup_gc_unit', 'days');
 			$auto_db_backup_copies = $this->request->variable('auto_db_backup_copies', 0);
+			$filetype = $this->request->variable('auto_db_backup_filetype', 'text');
 
 			if (!check_form_key('acp_auto_db_backup'))
 			{
@@ -171,6 +172,12 @@ class admin_controller
 			if ($auto_db_backup_gc < 1 || $auto_db_backup_gc > 99 || !isset(self::INTERVAL_SECONDS[$submitted_unit]))
 			{
 				$errors[] = $this->language->lang('AUTO_DB_BACKUP_FREQ_ERROR');
+			}
+
+			// Only a file type this server can write
+			if (!in_array($filetype, $filetypes, true))
+			{
+				$errors[] = $this->language->lang('AUTO_DB_BACKUP_FILETYPE_ERROR');
 			}
 
 			if ($auto_db_backup_copies < 0)
@@ -195,7 +202,7 @@ class admin_controller
 			{
 				$interval = $auto_db_backup_gc * self::INTERVAL_SECONDS[$submitted_unit];
 				$this->config->set('auto_db_backup_enable', $this->request->variable('auto_db_backup_enable', 0));
-				$this->config->set('auto_db_backup_filetype', $this->request->variable('auto_db_backup_filetype', 'text'));
+				$this->config->set('auto_db_backup_filetype', $filetype);
 				$this->config->set('auto_db_backup_gc', $interval);
 				$this->config->set('auto_db_backup_gc_unit', $submitted_unit);
 				$this->config->set('auto_db_backup_copies', $this->request->variable('auto_db_backup_copies', 0));

@@ -38,11 +38,13 @@ class auto_db_backup extends \phpbb\cron\task\base
 	protected $phpbb_container;
 	protected $root_path;
 	protected $php_ext;
+	/** @var string Database table prefix */
+	protected $table_prefix;
 
 	/**
 	* Constructor.
 	*/
-	public function __construct(config $config, db $db, db_tools $db_tools, log $log, user $user, ContainerInterface $phpbb_container, $root_path, $php_ext)
+	public function __construct(config $config, db $db, db_tools $db_tools, log $log, user $user, ContainerInterface $phpbb_container, $root_path, $php_ext, $table_prefix)
 	{
 		$this->config = $config;
 		$this->db = $db;
@@ -52,6 +54,7 @@ class auto_db_backup extends \phpbb\cron\task\base
 		$this->phpbb_container = $phpbb_container;
 		$this->root_path = $root_path;
 		$this->php_ext = $php_ext;
+		$this->table_prefix = $table_prefix;
 	}
 
 	/**
@@ -62,7 +65,7 @@ class auto_db_backup extends \phpbb\cron\task\base
 	public function run()
 	{
 		// this is required for the get_usable_memory function
-		include($this->root_path . 'includes/acp/acp_database.' . $this->php_ext);
+		include_once($this->root_path . 'includes/acp/acp_database.' . $this->php_ext);
 
 		$last_backup = (int) $this->config['auto_db_backup_last_gc'];
 		if ($this->config['auto_db_backup_gc_unit'] === 'hours')
@@ -79,13 +82,16 @@ class auto_db_backup extends \phpbb\cron\task\base
 
 		$this->config->set('auto_db_backup_last_gc', $last_backup_date, false);
 
-		// Optimize database tables before backup them (only unoptimized tables)
-		if ($this->config['auto_db_backup_optimize'])
+		// Optimize database tables before backup them (only unoptimized tables).
+		// MySQL only: the setting may still be on after a move to another database.
+		if ($this->config['auto_db_backup_optimize'] && in_array($this->db->get_sql_layer(), ['mysql4', 'mysqli']))
 		{
 			if ($result = $this->db->sql_query('SHOW TABLE STATUS'))
 			{
 				$tables = $this->db->sql_fetchrowset($result);
-				$size = sizeof($tables);
+				$this->db->sql_freeresult($result);
+				$size = count($tables);
+				$for_optimize = [];
 
 				for ($i = 0; $i < $size; $i++)
 				{
@@ -110,15 +116,13 @@ class auto_db_backup extends \phpbb\cron\task\base
 		$format = $this->config['auto_db_backup_filetype'];
 		$filename = 'backup_' . $time . '_' . self::BACKUP_MARKER . unique_id();
 
-		/** @var phpbb\db\extractor\extractor_interface $extractor Database extractor */
+		/** @var \phpbb\db\extractor\extractor_interface $extractor Database extractor */
 		$extractor = $this->phpbb_container->get('dbal.extractor');
 		$extractor->init_extractor($format, $filename, $time, false, true);
 
-		global $table_prefix;
-
 		$tables = $this->db_tools->sql_list_tables();
 
-		$extractor->write_start($table_prefix);
+		$extractor->write_start($this->table_prefix);
 
 		foreach ($tables as $table_name)
 		{

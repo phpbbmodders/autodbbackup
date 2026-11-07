@@ -69,14 +69,14 @@
 					{% endfor %}
 					</select>
 				</label>
-				<label for="auto_db_backup_hour">{{ lang('HOUR') }}{{ lang('COLON') }}
+				<label for="auto_db_backup_hour">{{ lang('AUTO_DB_BACKUP_HOUR') }}{{ lang('COLON') }}
 					<select name="auto_db_backup_hour" id="auto_db_backup_hour">
 					{% for hours in loops.hours %}
 						<option value="{{ hours.HOUR }}" {% if hours.S_SELECTED %}selected="selected"{% endif %}>{{ hours.HOUR }}</option>
 					{% endfor %}
 					</select>
 				</label>
-				<label for="auto_db_backup_minute">{{ lang('MINUTE') }}{{ lang('COLON') }}
+				<label for="auto_db_backup_minute">{{ lang('AUTO_DB_BACKUP_MINUTE') }}{{ lang('COLON') }}
 					<select name="auto_db_backup_minute" id="auto_db_backup_minute">
 					{% for minutes in loops.minutes %}
 						<option value="{{ minutes.MINUTE }}" {% if minutes.S_SELECTED %}selected="selected"{% endif %}>{{ minutes.MINUTE }}</option>

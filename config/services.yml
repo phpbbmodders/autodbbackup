@@ -10,6 +10,7 @@ services:
             - '@service_container'
             - '%core.root_path%'
             - '%core.php_ext%'
+            - '%core.table_prefix%'
         calls:
             - [set_name, [phpbbmodders.autodbbackup.cron.task.auto_db_backup]]
         tags:
