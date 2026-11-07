@@ -25,7 +25,7 @@ if (empty($lang) || !is_array($lang))
 
 $lang = array_merge($lang, array(
 	'AUTO_DB_BACKUP_SETTINGS'				=> 'Auto Database Backup settings',
-	'AUTO_DB_BACKUP_SETTINGS_EXPLAIN'		=> 'Here you can set default settings for automatic database backups. Depending on your server configuration you may be able to compress the database.<br>All backups will be stored in the <samp>/store/</samp> folder. You can restore backups via the <em>Restore</em> panel.',
+	'AUTO_DB_BACKUP_SETTINGS_EXPLAIN'		=> 'Here you can set default settings for automatic database backups. Depending on your server configuration you may be able to compress the database.<br>Backups are stored in the <samp>/store/</samp> folder unless you set a backup directory below. Backups in the default location can be restored via the <em>Restore</em> panel.',
 	'AUTO_DB_BACKUP_SETTINGS_CHANGED'		=> 'Auto Database Backup Settings changed.',
 	'AUTO_DB_BACKUP_ENABLE'					=> 'Enable Auto Database Backup',
 	'AUTO_DB_BACKUP_ENABLE_EXPLAIN'			=> 'Enable or disable automatic database backups',
